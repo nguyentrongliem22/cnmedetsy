@@ -110,16 +110,22 @@
         <div id="view-dashboard" class="hidden space-y-6">
             
             <!-- Bộ lọc thời gian -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-4 justify-between">
-                <div class="flex items-center gap-2">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center gap-4 justify-between">
+                <div class="flex items-center gap-2 whitespace-nowrap">
                     <i class="fa-regular fa-calendar text-slate-400"></i>
                     <span class="font-medium text-slate-700">Lọc theo ngày:</span>
                 </div>
                 
                 <div class="flex flex-wrap gap-2 flex-grow">
                     <button onclick="setDateFilter('all')" id="btn-filter-all" class="filter-btn bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium">Tất cả</button>
-                    <button onclick="setDateFilter('7')" id="btn-filter-7" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">7 ngày qua</button>
-                    <button onclick="setDateFilter('30')" id="btn-filter-30" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">30 ngày qua</button>
+                    <button onclick="setDateFilter('today')" id="btn-filter-today" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Hôm nay</button>
+                    <button onclick="setDateFilter('yesterday')" id="btn-filter-yesterday" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Hôm qua</button>
+                    <button onclick="setDateFilter('7')" id="btn-filter-7" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">7 ngày</button>
+                    <button onclick="setDateFilter('30')" id="btn-filter-30" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">30 ngày</button>
+                    <button onclick="setDateFilter('this_month')" id="btn-filter-this_month" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Tháng này</button>
+                    <button onclick="setDateFilter('last_month')" id="btn-filter-last_month" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Tháng trước</button>
+                    <button onclick="setDateFilter('this_quarter')" id="btn-filter-this_quarter" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Quý này</button>
+                    <button onclick="setDateFilter('ytd')" id="btn-filter-ytd" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Từ đầu năm</button>
                 </div>
                 
                 <div class="flex items-center gap-2">
@@ -263,7 +269,8 @@
         let normalizedData = []; // Dữ liệu đã chuẩn hóa gộp chung 3 bảng để làm Dashboard
         
         let isFirstLoad = true;
-        let activeFilter = 'all'; // all, 7, 30, custom
+        let activeFilter = 'all'; // Default filter
+        const availableFilters = ['all', 'today', 'yesterday', '7', '30', 'this_month', 'last_month', 'this_quarter', 'ytd'];
         
         // Chứa các instance của Chart.js để destroy khi vẽ lại
         let charts = { revenue: null, sku: null, shop: null };
@@ -469,12 +476,14 @@
             activeFilter = type;
             
             // Cập nhật UI nút bấm
-            ['all', '7', '30'].forEach(t => {
+            availableFilters.forEach(t => {
                 const btn = document.getElementById(`btn-filter-${t}`);
-                if(t === type) {
-                    btn.className = "filter-btn bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium";
-                } else {
-                    btn.className = "filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
+                if(btn) {
+                    if(t === type) {
+                        btn.className = "filter-btn bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium";
+                    } else {
+                        btn.className = "filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
+                    }
                 }
             });
             
@@ -491,8 +500,9 @@
             if(start || end) {
                 activeFilter = 'custom';
                 // Reset UI các nút có sẵn
-                ['all', '7', '30'].forEach(t => {
-                    document.getElementById(`btn-filter-${t}`).className = "filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
+                availableFilters.forEach(t => {
+                    const btn = document.getElementById(`btn-filter-${t}`);
+                    if(btn) btn.className = "filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
                 });
                 renderDashboard();
             }
@@ -504,11 +514,31 @@
             const now = new Date();
             let startDate = new Date();
             let endDate = new Date();
+            
+            // Đặt endDate mặc định đến cuối ngày hiện tại
+            endDate.setHours(23, 59, 59, 999);
 
-            if (activeFilter === '7') {
+            if (activeFilter === 'today') {
+                // startDate mặc định là hôm nay
+            } else if (activeFilter === 'yesterday') {
+                startDate.setDate(now.getDate() - 1);
+                endDate = new Date(startDate);
+                endDate.setHours(23, 59, 59, 999);
+            } else if (activeFilter === '7') {
                 startDate.setDate(now.getDate() - 7);
             } else if (activeFilter === '30') {
                 startDate.setDate(now.getDate() - 30);
+            } else if (activeFilter === 'this_month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else if (activeFilter === 'last_month') {
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0); // Ngày cuối cùng của tháng trước
+                endDate.setHours(23, 59, 59, 999);
+            } else if (activeFilter === 'this_quarter') {
+                const quarter = Math.floor(now.getMonth() / 3);
+                startDate = new Date(now.getFullYear(), quarter * 3, 1);
+            } else if (activeFilter === 'ytd') {
+                startDate = new Date(now.getFullYear(), 0, 1);
             } else if (activeFilter === 'custom') {
                 const s = document.getElementById('date-start').value;
                 const e = document.getElementById('date-end').value;
@@ -516,11 +546,11 @@
                 if(s) startDate = new Date(s); else startDate = new Date('2000-01-01');
                 if(e) endDate = new Date(e); else endDate = new Date('2100-01-01');
                 // Chỉnh end date đến cuối ngày
-                endDate.setHours(23,59,59,999);
+                endDate.setHours(23, 59, 59, 999);
             }
             
             // Xóa giờ để so sánh startDate chính xác từ đầu ngày
-            startDate.setHours(0,0,0,0);
+            startDate.setHours(0, 0, 0, 0);
 
             return normalizedData.filter(item => {
                 if(!item.date) return false; // Bỏ qua nếu ko dịch được ngày
