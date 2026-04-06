@@ -13,10 +13,15 @@
     <!-- FontAwesome cho icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .table-container::-webkit-scrollbar { height: 8px; width: 8px; }
+        /* Tùy chỉnh thanh cuộn cho bảng */
+        .table-container::-webkit-scrollbar { height: 6px; width: 6px; }
         .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Ẩn thanh cuộn cho bộ lọc ngang trên mobile */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .loader {
             border: 4px solid #f3f3f3;
@@ -39,32 +44,45 @@
 </head>
 <body class="bg-slate-50 min-h-screen font-sans text-slate-800">
 
-    <!-- Header -->
+    <!-- Header (Đã tối ưu Mobile) -->
     <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-3">
                 
-                <!-- Logo & Title -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-600 text-white p-2 rounded-lg">
-                        <i class="fa-solid fa-chart-line text-xl"></i>
+                <!-- Logo, Title & Mobile Refresh -->
+                <div class="flex items-center justify-between w-full md:w-auto">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-600 text-white p-2 rounded-lg">
+                            <i class="fa-solid fa-chart-line text-lg md:text-xl"></i>
+                        </div>
+                        <h1 class="text-xl md:text-2xl font-bold text-slate-800">Đơn Hàng</h1>
                     </div>
-                    <h1 class="text-2xl font-bold text-slate-800">Hệ Thống Đơn Hàng</h1>
+                    
+                    <!-- Nút refresh dành riêng cho Mobile (nhỏ gọn) -->
+                    <div class="md:hidden flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span id="live-ping-mobile" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 hidden"></span>
+                          <span id="live-dot-mobile" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                        </span>
+                        <button onclick="fetchAllData()" class="text-blue-600 ml-1">
+                            <i class="fa-solid fa-rotate-right" id="refresh-icon-mobile"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Main View Navigation (Dashboard vs Table) -->
-                <div class="flex rounded-lg shadow-sm border border-slate-200 p-1 bg-slate-100">
-                    <button onclick="switchMainView('dashboard')" id="btn-view-dashboard" class="view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2">
+                <div class="flex rounded-lg shadow-sm border border-slate-200 p-1 bg-slate-100 w-full md:w-auto">
+                    <button onclick="switchMainView('dashboard')" id="btn-view-dashboard" class="flex-1 md:flex-none view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2">
                         <i class="fa-solid fa-chart-pie"></i> Tổng quan
                     </button>
-                    <button onclick="switchMainView('table')" id="btn-view-table" class="view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-table-list"></i> Bảng dữ liệu
+                    <button onclick="switchMainView('table')" id="btn-view-table" class="flex-1 md:flex-none view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-table-list"></i> Dữ liệu
                     </button>
                 </div>
                 
-                <!-- Status & Refresh -->
-                <div class="flex items-center gap-4 text-sm">
-                    <div id="last-updated" class="text-slate-500 hidden md:block">
+                <!-- Status & Refresh cho Desktop -->
+                <div class="hidden md:flex items-center gap-4 text-sm">
+                    <div id="last-updated" class="text-slate-500">
                         <i class="fa-regular fa-clock mr-1"></i> Chưa cập nhật
                     </div>
                     <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full" title="Tự động làm mới mỗi 30 giây">
@@ -72,10 +90,10 @@
                           <span id="live-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 hidden"></span>
                           <span id="live-dot" class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                         </span>
-                        <span class="font-medium text-slate-700 hidden sm:inline">Auto 30s</span>
+                        <span class="font-medium text-slate-700">Auto 30s</span>
                     </div>
                     <button onclick="fetchAllData()" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-                        <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> <span class="hidden sm:inline">Cập nhật</span>
+                        <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> Cập nhật
                     </button>
                 </div>
             </div>
@@ -83,7 +101,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         <!-- Cảnh báo nếu chưa mở quyền -->
         <div id="error-banner" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-sm">
@@ -109,80 +127,85 @@
         <!-- ================= DASHBOARD VIEW ================= -->
         <div id="view-dashboard" class="hidden space-y-6">
             
-            <!-- Bộ lọc thời gian -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center gap-4 justify-between">
-                <div class="flex items-center gap-2 whitespace-nowrap">
+            <!-- Bộ lọc thời gian (Tối ưu Mobile) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center gap-4 justify-between w-full">
+                
+                <div class="flex items-center gap-2 whitespace-nowrap hidden lg:flex">
                     <i class="fa-regular fa-calendar text-slate-400"></i>
-                    <span class="font-medium text-slate-700">Lọc theo ngày:</span>
+                    <span class="font-medium text-slate-700">Lọc ngày:</span>
                 </div>
                 
-                <div class="flex flex-wrap gap-2 flex-grow">
-                    <button onclick="setDateFilter('all')" id="btn-filter-all" class="filter-btn bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium">Tất cả</button>
-                    <button onclick="setDateFilter('today')" id="btn-filter-today" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Hôm nay</button>
-                    <button onclick="setDateFilter('yesterday')" id="btn-filter-yesterday" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Hôm qua</button>
-                    <button onclick="setDateFilter('7')" id="btn-filter-7" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">7 ngày</button>
-                    <button onclick="setDateFilter('30')" id="btn-filter-30" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">30 ngày</button>
-                    <button onclick="setDateFilter('this_month')" id="btn-filter-this_month" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Tháng này</button>
-                    <button onclick="setDateFilter('last_month')" id="btn-filter-last_month" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Tháng trước</button>
-                    <button onclick="setDateFilter('this_quarter')" id="btn-filter-this_quarter" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Quý này</button>
-                    <button onclick="setDateFilter('ytd')" id="btn-filter-ytd" class="filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Từ đầu năm</button>
+                <!-- Preset buttons vuốt ngang trên mobile -->
+                <div class="flex overflow-x-auto gap-2 w-full xl:w-auto pb-1 hide-scrollbar">
+                    <button onclick="setDateFilter('all')" id="btn-filter-all" class="filter-btn shrink-0 bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium">Tất cả</button>
+                    <button onclick="setDateFilter('today')" id="btn-filter-today" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Hôm nay</button>
+                    <button onclick="setDateFilter('yesterday')" id="btn-filter-yesterday" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Hôm qua</button>
+                    <button onclick="setDateFilter('7')" id="btn-filter-7" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">7 ngày</button>
+                    <button onclick="setDateFilter('30')" id="btn-filter-30" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">30 ngày</button>
+                    <button onclick="setDateFilter('this_month')" id="btn-filter-this_month" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Tháng này</button>
+                    <button onclick="setDateFilter('last_month')" id="btn-filter-last_month" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Tháng trước</button>
+                    <button onclick="setDateFilter('this_quarter')" id="btn-filter-this_quarter" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Quý này</button>
+                    <button onclick="setDateFilter('ytd')" id="btn-filter-ytd" class="filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium">Từ đầu năm</button>
                 </div>
                 
-                <div class="flex items-center gap-2">
-                    <input type="date" id="date-start" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500">
-                    <span class="text-slate-400">-</span>
-                    <input type="date" id="date-end" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500">
-                    <button onclick="applyCustomDateFilter()" class="bg-slate-800 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-700 transition">Lọc</button>
+                <!-- Custom date chọn tay -->
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full xl:w-auto mt-2 xl:mt-0">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="date" id="date-start" class="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500">
+                        <span class="text-slate-400">-</span>
+                        <input type="date" id="date-end" class="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <button onclick="applyCustomDateFilter()" class="w-full sm:w-auto bg-slate-800 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-700 transition">Lọc</button>
                 </div>
             </div>
 
             <!-- KPIs -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
                 <!-- KPI: Số đơn hàng -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div class="absolute right-0 top-0 opacity-5 p-6 text-6xl"><i class="fa-solid fa-cart-shopping"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-5 p-4 text-6xl"><i class="fa-solid fa-cart-shopping"></i></div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Tổng Số Đơn Hàng</p>
                     <h3 class="text-3xl font-bold text-slate-800" id="kpi-orders">0</h3>
                 </div>
                 
                 <!-- KPI: Doanh thu -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div class="absolute right-0 top-0 opacity-5 p-6 text-6xl"><i class="fa-solid fa-dollar-sign"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-5 p-4 text-6xl"><i class="fa-solid fa-dollar-sign"></i></div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Tổng Doanh Thu (Grant Total)</p>
                     <h3 class="text-3xl font-bold text-blue-600" id="kpi-revenue">$0.00</h3>
                 </div>
 
                 <!-- KPI: Số lượng SP -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div class="absolute right-0 top-0 opacity-5 p-6 text-6xl"><i class="fa-solid fa-box-open"></i></div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-5 p-4 text-6xl"><i class="fa-solid fa-box-open"></i></div>
                     <p class="text-sm font-medium text-slate-500 mb-1">Tổng Sản Phẩm Bán Ra</p>
                     <h3 class="text-3xl font-bold text-emerald-600" id="kpi-quantity">0</h3>
                 </div>
             </div>
 
             <!-- Charts Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                 
-                <!-- Biểu đồ Doanh thu (Chiếm 2 cột) -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                <!-- Biểu đồ Doanh thu -->
+                <div class="bg-white p-4 lg:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                     <h3 class="text-base font-bold text-slate-800 mb-4">Doanh thu theo ngày</h3>
-                    <div class="relative h-[300px] w-full">
+                    <div class="relative h-[250px] lg:h-[300px] w-full">
                         <canvas id="chart-revenue"></canvas>
                     </div>
                 </div>
 
-                <!-- Biểu đồ Nguồn đơn (Chiếm 1 cột) -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-base font-bold text-slate-800 mb-4">Tỷ trọng đơn hàng theo Shop</h3>
-                    <div class="relative h-[300px] w-full flex justify-center">
+                <!-- Biểu đồ Nguồn đơn -->
+                <div class="bg-white p-4 lg:p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-slate-800 mb-4">Tỷ trọng đơn hàng</h3>
+                    <div class="relative h-[250px] lg:h-[300px] w-full flex justify-center">
                         <canvas id="chart-shop"></canvas>
                     </div>
                 </div>
 
-                <!-- Biểu đồ Top SKU (Chiếm full 3 cột) -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-3">
+                <!-- Biểu đồ Top SKU -->
+                <div class="bg-white p-4 lg:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-3">
                     <h3 class="text-base font-bold text-slate-800 mb-4">Top 15 SKU bán chạy nhất</h3>
-                    <div class="relative h-[400px] w-full">
+                    <div class="relative h-[300px] lg:h-[400px] w-full">
                         <canvas id="chart-sku"></canvas>
                     </div>
                 </div>
@@ -193,9 +216,9 @@
 
         <!-- ================= TABLE VIEW ================= -->
         <div id="view-table" class="hidden">
-            <!-- Tabs cho từng Shop -->
-            <div class="border-b border-slate-200 mb-6">
-                <nav class="flex space-x-8 overflow-x-auto" aria-label="Tabs" id="tabs-container">
+            <!-- Tabs cho từng Shop (Cuộn ngang trên Mobile) -->
+            <div class="border-b border-slate-200 mb-4">
+                <nav class="flex space-x-6 overflow-x-auto hide-scrollbar" aria-label="Tabs" id="tabs-container">
                     <!-- Tabs will be generated here -->
                 </nav>
             </div>
@@ -203,9 +226,9 @@
             <!-- Bảng Dữ Liệu -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <!-- Empty State -->
-                <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-slate-500">
+                <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-slate-500 text-center px-4">
                     <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
-                    <p>Chưa có dòng dữ liệu nào trong sheet này.</p>
+                    <p>Chưa có dòng dữ liệu nào trong sheet này hoặc cột dữ liệu không hợp lệ.</p>
                 </div>
 
                 <!-- Table -->
@@ -243,15 +266,15 @@
             'Total Tax Cost', 'Total VAT', 'Discount Amount'
         ];
 
-        // Dictionary nhận diện cột
+        // MỞ RỘNG MẠNH MẼ BỘ TỪ KHÓA NHẬN DIỆN CỘT (Để chống lỗi Lilygrant bị nhảy cột)
         const COLUMN_MAPPING = {
-            'Thời gian': ['thời gian', 'date', 'time', 'ngày', 'created'],
-            'ID Biên lai': ['id biên lai', 'biên lai', 'receipt', 'order id', 'mã đơn'],
-            'Tên khách hàng và địa chỉ đã được mã hóa': ['mã hóa', 'encrypted', 'tên khách hàng', 'địa chỉ', 'name', 'address', 'buyer'],
+            'Thời gian': ['thời gian', 'date', 'time', 'ngày', 'created', 'sale date', 'order date', 'timestamp'],
+            'ID Biên lai': ['id biên lai', 'biên lai', 'receipt', 'order id', 'mã đơn', 'transaction', 'order_id', 'order', 'id'],
+            'Tên khách hàng và địa chỉ đã được mã hóa': ['mã hóa', 'encrypted', 'tên khách hàng', 'địa chỉ', 'name', 'address', 'buyer', 'ship to', 'khách'],
             'Biến thể': ['biến thể', 'variant', 'variation', 'option'],
             'SKU': ['sku', 'mã sp', 'mã sản phẩm'],
             'Số lượng': ['số lượng', 'quantity', 'qty'],
-            'Grant Total': ['grant total', 'grand total', 'tổng cộng', 'order total'],
+            'Grant Total': ['grant total', 'grand total', 'tổng cộng', 'order total', 'total'],
             'Sub Total': ['sub total', 'subtotal', 'tạm tính', 'item total'],
             'Total Price': ['total price', 'giá'],
             'Total Shipping': ['total shipping', 'shipping', 'phí ship', 'vận chuyển'],
@@ -263,21 +286,21 @@
         };
 
         // State & Biến toàn cục
-        let currentMainView = 'dashboard'; // 'dashboard' or 'table'
+        let currentMainView = 'dashboard'; 
         let currentTab = SHEETS[0];
         let storeData = { 'Lilygrant': [], 'CNMEDDesign': [], 'PerfectGif': [] };
-        let normalizedData = []; // Dữ liệu đã chuẩn hóa gộp chung 3 bảng để làm Dashboard
+        let normalizedData = []; 
         
         let isFirstLoad = true;
-        let activeFilter = 'all'; // Default filter
+        let activeFilter = 'all'; 
         const availableFilters = ['all', 'today', 'yesterday', '7', '30', 'this_month', 'last_month', 'this_quarter', 'ytd'];
         
-        // Chứa các instance của Chart.js để destroy khi vẽ lại
+        // Chứa các instance của Chart.js
         let charts = { revenue: null, sku: null, shop: null };
 
         // ---------------- THIẾT LẬP CHUNG ----------------
         function initApp() {
-            switchMainView('dashboard'); // Mặc định mở dashboard
+            switchMainView('dashboard');
             fetchAllData();
             setInterval(fetchAllData, 30000); // Auto refresh 30s
         }
@@ -290,16 +313,15 @@
             const viewTable = document.getElementById('view-table');
 
             if(view === 'dashboard') {
-                btnDash.className = "view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2";
-                btnTable.className = "view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2";
+                btnDash.className = "flex-1 md:flex-none view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2";
+                btnTable.className = "flex-1 md:flex-none view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2";
                 viewDash.classList.remove('hidden');
                 viewTable.classList.add('hidden');
                 
-                // Cần setTimeout nhẹ để chart.js nhận diện đúng kích thước thẻ chứa div sau khi hiển thị
                 if(!isFirstLoad) setTimeout(renderDashboard, 50); 
             } else {
-                btnTable.className = "view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2";
-                btnDash.className = "view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2";
+                btnTable.className = "flex-1 md:flex-none view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2";
+                btnDash.className = "flex-1 md:flex-none view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2";
                 viewTable.classList.remove('hidden');
                 viewDash.classList.add('hidden');
                 
@@ -310,17 +332,25 @@
             }
         }
 
-        // ---------------- LẤY VÀ XỬ LÝ DỮ LIỆU TỪ SHEET ----------------
-        // Hàm loại bỏ dòng trùng lặp dựa trên ID Biên lai (Ưu tiên giữ dòng mới nhất)
+        // ---------------- LỌC DỮ LIỆU TRÙNG LẶP (THÔNG MINH HƠN) ----------------
         function removeDuplicateOrders(data) {
             if (!data || data.length === 0) return [];
             
             const rawKeys = Object.keys(data[0]);
-            let idKey = rawKeys.find(k => k.trim().toLowerCase() === 'id biên lai');
-            if (!idKey && COLUMN_MAPPING['ID Biên lai']) {
-                idKey = rawKeys.find(k => COLUMN_MAPPING['ID Biên lai'].some(kw => k.toLowerCase().includes(kw.toLowerCase())));
+            
+            // Tìm kiếm cột ID với bộ từ khóa rộng hơn để chống nhảy cột
+            let idKey = rawKeys.find(k => k && k.trim().toLowerCase() === 'id biên lai');
+            
+            if (!idKey) {
+                idKey = rawKeys.find(k => k && COLUMN_MAPPING['ID Biên lai'].some(kw => k.trim().toLowerCase().includes(kw.toLowerCase())));
             }
             
+            // Nếu vẫn không thấy, cố gắng tìm bất cứ cột nào có chữ 'id'
+            if (!idKey) {
+                idKey = rawKeys.find(k => k && (k.toLowerCase().includes('id') || k.toLowerCase().includes('mã')));
+            }
+            
+            // Nếu sheet hoàn toàn không có bất kỳ cột nào dùng làm ID được, thì đành bỏ qua lọc
             if (!idKey) return data; 
             
             const seen = new Set();
@@ -331,26 +361,32 @@
                 const row = data[i];
                 const id = row[idKey];
                 
-                if (!id || String(id).trim() === '') {
-                    uniqueData.unshift(row); // Không có ID thì vẫn giữ lại
+                // Nếu ID trống, cứ giữ lại vì không có cơ sở để lọc trùng
+                if (id === undefined || id === null || String(id).trim() === '') {
+                    uniqueData.unshift(row);
                     continue;
                 }
                 
                 const normalizedId = String(id).trim().toLowerCase();
                 if (!seen.has(normalizedId)) {
                     seen.add(normalizedId);
-                    uniqueData.unshift(row); // Thêm vào đầu mảng để giữ đúng thứ tự ban đầu
+                    uniqueData.unshift(row); // Thêm vào đầu mảng để giữ đúng thứ tự
                 }
             }
             return uniqueData;
         }
 
+        // ---------------- TẢI DỮ LIỆU TỪ SHEET ----------------
         async function fetchAllData() {
             const refreshIcon = document.getElementById('refresh-icon');
+            const refreshIconMobile = document.getElementById('refresh-icon-mobile');
             const livePing = document.getElementById('live-ping');
+            const livePingMobile = document.getElementById('live-ping-mobile');
             
-            refreshIcon.classList.add('fa-spin');
-            livePing.classList.remove('hidden');
+            if(refreshIcon) refreshIcon.classList.add('fa-spin');
+            if(refreshIconMobile) refreshIconMobile.classList.add('fa-spin');
+            if(livePing) livePing.classList.remove('hidden');
+            if(livePingMobile) livePingMobile.classList.remove('hidden');
             
             if(isFirstLoad) {
                 document.getElementById('loading-state').classList.replace('hidden', 'flex');
@@ -365,7 +401,7 @@
 
                 SHEETS.forEach((sheet, index) => {
                     if(results[index] === null) hasError = true;
-                    else storeData[sheet] = removeDuplicateOrders(results[index]); // Lọc trùng lặp trước khi lưu
+                    else storeData[sheet] = removeDuplicateOrders(results[index]); // Lọc trùng lặp
                 });
 
                 if(hasError) {
@@ -373,20 +409,24 @@
                 } else {
                     document.getElementById('error-banner').classList.add('hidden');
                     const now = new Date();
-                    document.getElementById('last-updated').innerHTML = `<i class="fa-regular fa-circle-check text-green-500 mr-1"></i> Đã cập nhật: ${now.toLocaleTimeString('vi-VN')}`;
+                    document.getElementById('last-updated').innerHTML = `<i class="fa-regular fa-circle-check text-green-500 mr-1"></i> Cập nhật: ${now.toLocaleTimeString('vi-VN')}`;
                     
-                    // Chuẩn hóa dữ liệu ngay sau khi tải xong để phục vụ Dashboard
+                    // Chuẩn hóa dữ liệu ngay để phục vụ Dashboard
                     processNormalizedData();
                 }
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu:", error);
             } finally {
-                refreshIcon.classList.remove('fa-spin');
-                setTimeout(() => livePing.classList.add('hidden'), 1000);
+                if(refreshIcon) refreshIcon.classList.remove('fa-spin');
+                if(refreshIconMobile) refreshIconMobile.classList.remove('fa-spin');
+                setTimeout(() => {
+                    if(livePing) livePing.classList.add('hidden');
+                    if(livePingMobile) livePingMobile.classList.add('hidden');
+                }, 1000);
                 
                 if(isFirstLoad) {
                     document.getElementById('loading-state').classList.replace('flex', 'hidden');
-                    switchMainView(currentMainView); // Kích hoạt hiển thị view hiện tại
+                    switchMainView(currentMainView);
                     isFirstLoad = false;
                 } else {
                     if(currentMainView === 'dashboard') renderDashboard();
@@ -415,24 +455,22 @@
         }
 
         // ---------------- CHUẨN HÓA DỮ LIỆU ĐỂ LÀM THỐNG KÊ ----------------
-        // Chuyển đổi "chuỗi ngày" bất kỳ từ sheet thành Date JS object chuẩn
         function parseDateString(dateStr) {
-            if(!dateStr) return null;
+            if(!dateStr || String(dateStr).trim() === '') return null;
             let d = new Date(dateStr);
             if (!isNaN(d.getTime())) return d;
             
-            // Xử lý định dạng hay gặp ở VN: DD/MM/YYYY hoặc DD-MM-YYYY
+            // Xử lý định dạng VN: DD/MM/YYYY hoặc DD-MM-YYYY
             const parts = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
             if(parts) return new Date(parts[3], parts[2]-1, parts[1]);
             
-            return null; // Bó tay
+            return null;
         }
 
         function extractNumber(str) {
             if(!str) return 0;
             if(typeof str === 'number') return str;
-            // Bỏ tất cả chữ cái, dấu $,... chỉ giữ lại số, dấu chấm, dấu phẩy
-            const cleaned = str.replace(/[^0-9.-]+/g,"");
+            const cleaned = String(str).replace(/[^0-9.-]+/g,"");
             return parseFloat(cleaned) || 0;
         }
 
@@ -447,24 +485,30 @@
                 const keyMap = {};
                 
                 TARGET_COLUMNS.forEach(target => {
-                    let found = rawKeys.find(k => k.trim().toLowerCase() === target.toLowerCase());
+                    let found = rawKeys.find(k => k && k.trim().toLowerCase() === target.toLowerCase());
                     if (!found && COLUMN_MAPPING[target]) {
-                        found = rawKeys.find(k => COLUMN_MAPPING[target].some(kw => k.toLowerCase().includes(kw.toLowerCase())));
+                        found = rawKeys.find(k => k && COLUMN_MAPPING[target].some(kw => k.toLowerCase().includes(kw.toLowerCase())));
                     }
                     keyMap[target] = found;
                 });
 
                 data.forEach(row => {
-                    const rawDate = row[keyMap['Thời gian']];
+                    // Xử lý an toàn nếu hoàn toàn không tìm được cột thời gian
+                    const timeKey = keyMap['Thời gian'];
+                    const rawDate = timeKey ? row[timeKey] : null;
                     const dateObj = parseDateString(rawDate);
                     
+                    const skuKey = keyMap['SKU'];
+                    const qtyKey = keyMap['Số lượng'];
+                    const revKey = keyMap['Grant Total'];
+
                     normalizedData.push({
                         shop: sheet,
                         date: dateObj,
                         dateStr: dateObj ? dateObj.toISOString().split('T')[0] : 'Unknown', // YYYY-MM-DD
-                        sku: row[keyMap['SKU']] || '(Chưa có mã SKU)',
-                        quantity: extractNumber(row[keyMap['Số lượng']]),
-                        revenue: extractNumber(row[keyMap['Grant Total']]) / 100
+                        sku: (skuKey && row[skuKey]) ? row[skuKey] : '(Chưa có mã SKU)',
+                        quantity: qtyKey ? extractNumber(row[qtyKey]) : 0,
+                        revenue: revKey ? (extractNumber(row[revKey]) / 100) : 0
                     });
                 });
             });
@@ -475,19 +519,17 @@
         function setDateFilter(type) {
             activeFilter = type;
             
-            // Cập nhật UI nút bấm
             availableFilters.forEach(t => {
                 const btn = document.getElementById(`btn-filter-${t}`);
                 if(btn) {
                     if(t === type) {
-                        btn.className = "filter-btn bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium";
+                        btn.className = "filter-btn shrink-0 bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium";
                     } else {
-                        btn.className = "filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
+                        btn.className = "filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
                     }
                 }
             });
             
-            // Xóa input custom date nếu dùng nút định sẵn
             document.getElementById('date-start').value = '';
             document.getElementById('date-end').value = '';
             
@@ -499,10 +541,9 @@
             const end = document.getElementById('date-end').value;
             if(start || end) {
                 activeFilter = 'custom';
-                // Reset UI các nút có sẵn
                 availableFilters.forEach(t => {
                     const btn = document.getElementById(`btn-filter-${t}`);
-                    if(btn) btn.className = "filter-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
+                    if(btn) btn.className = "filter-btn shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-sm font-medium";
                 });
                 renderDashboard();
             }
@@ -515,7 +556,6 @@
             let startDate = new Date();
             let endDate = new Date();
             
-            // Đặt endDate mặc định đến cuối ngày hiện tại
             endDate.setHours(23, 59, 59, 999);
 
             if (activeFilter === 'today') {
@@ -532,7 +572,7 @@
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
             } else if (activeFilter === 'last_month') {
                 startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                endDate = new Date(now.getFullYear(), now.getMonth(), 0); // Ngày cuối cùng của tháng trước
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0); 
                 endDate.setHours(23, 59, 59, 999);
             } else if (activeFilter === 'this_quarter') {
                 const quarter = Math.floor(now.getMonth() / 3);
@@ -545,15 +585,13 @@
                 
                 if(s) startDate = new Date(s); else startDate = new Date('2000-01-01');
                 if(e) endDate = new Date(e); else endDate = new Date('2100-01-01');
-                // Chỉnh end date đến cuối ngày
                 endDate.setHours(23, 59, 59, 999);
             }
             
-            // Xóa giờ để so sánh startDate chính xác từ đầu ngày
             startDate.setHours(0, 0, 0, 0);
 
             return normalizedData.filter(item => {
-                if(!item.date) return false; // Bỏ qua nếu ko dịch được ngày
+                if(!item.date) return false; 
                 return item.date >= startDate && item.date <= endDate;
             });
         }
@@ -561,7 +599,6 @@
         function renderDashboard() {
             const filteredData = filterDataByDate();
             
-            // 1. Tính toán KPIs
             let totalRev = 0;
             let totalQty = 0;
             let totalOrders = filteredData.length;
@@ -574,51 +611,40 @@
                 totalRev += item.revenue;
                 totalQty += item.quantity;
                 
-                // Cộng dồn doanh thu theo ngày
                 if(item.dateStr !== 'Unknown') {
                     revByDateMap[item.dateStr] = (revByDateMap[item.dateStr] || 0) + item.revenue;
                 }
                 
-                // Cộng dồn số lượng bán theo SKU
                 if(item.sku) {
                     skuCountMap[item.sku] = (skuCountMap[item.sku] || 0) + item.quantity;
                 }
                 
-                // Đếm đơn hàng theo shop
                 shopOrderMap[item.shop] = (shopOrderMap[item.shop] || 0) + 1;
             });
 
-            // Cập nhật Text trên KPIs
             document.getElementById('kpi-orders').innerText = totalOrders.toLocaleString('vi-VN');
             document.getElementById('kpi-revenue').innerText = '$' + totalRev.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('kpi-quantity').innerText = totalQty.toLocaleString('vi-VN');
 
-            // 2. Chuẩn bị Data cho Biểu đồ Doanh thu (Sắp xếp ngày tăng dần)
             const sortedDates = Object.keys(revByDateMap).sort();
             const revData = sortedDates.map(date => revByDateMap[date]);
 
-            // 3. Chuẩn bị Data cho Biểu đồ Top SKU
-            // Chuyển map sang array, sort giảm dần theo số lượng
             const sortedSKUs = Object.keys(skuCountMap)
                 .map(sku => ({ sku: sku, qty: skuCountMap[sku] }))
                 .sort((a, b) => b.qty - a.qty)
-                .slice(0, 15); // Lấy top 15
+                .slice(0, 15); 
 
             const skuLabels = sortedSKUs.map(item => item.sku);
             const skuData = sortedSKUs.map(item => item.qty);
 
-            // 4. Chuẩn bị Data cho Biểu đồ Tỷ trọng Shop
             const shopLabels = Object.keys(shopOrderMap);
             const shopData = shopLabels.map(shop => shopOrderMap[shop]);
 
-            // ----- VẼ CHART -----
-            
-            // Hủy chart cũ nếu có
+            // Hủy chart cũ
             if(charts.revenue) charts.revenue.destroy();
             if(charts.sku) charts.sku.destroy();
             if(charts.shop) charts.shop.destroy();
 
-            // Chart Doanh Thu (Line)
             const ctxRev = document.getElementById('chart-revenue').getContext('2d');
             charts.revenue = new Chart(ctxRev, {
                 type: 'line',
@@ -642,7 +668,6 @@
                 }
             });
 
-            // Chart Shop (Doughnut)
             const ctxShop = document.getElementById('chart-shop').getContext('2d');
             charts.shop = new Chart(ctxShop, {
                 type: 'doughnut',
@@ -650,20 +675,17 @@
                     labels: shopLabels,
                     datasets: [{
                         data: shopData,
-                        backgroundColor: ['#f43f5e', '#8b5cf6', '#10b981'], // Màu phân biệt các shop
+                        backgroundColor: ['#f43f5e', '#8b5cf6', '#10b981'], 
                         borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom' }
-                    },
+                    plugins: { legend: { position: 'bottom' } },
                     cutout: '65%'
                 }
             });
 
-            // Chart SKU (Bar Ngang)
             const ctxSku = document.getElementById('chart-sku').getContext('2d');
             charts.sku = new Chart(ctxSku, {
                 type: 'bar',
@@ -677,7 +699,7 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Đảo thành Bar ngang cho tên SKU dài dễ đọc
+                    indexAxis: 'y', 
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { x: { beginAtZero: true } }
@@ -686,7 +708,7 @@
         }
 
 
-        // ---------------- RENDER TABLE THEO TAB (CODE CŨ) ----------------
+        // ---------------- RENDER TABLE THEO TAB ----------------
         function renderTabs() {
             const container = document.getElementById('tabs-container');
             container.innerHTML = '';
@@ -697,12 +719,12 @@
                 
                 const isSelected = sheet === currentTab;
                 btn.className = `
-                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                    whitespace-nowrap py-3 px-2 border-b-2 font-medium text-sm transition-colors
                     ${isSelected ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
                 `;
                 
                 const count = storeData[sheet] ? storeData[sheet].length : 0;
-                btn.innerHTML = `${sheet} <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'}">${count}</span>`;
+                btn.innerHTML = `${sheet} <span class="ml-1.5 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'}">${count}</span>`;
                 container.appendChild(btn);
             });
         }
@@ -728,10 +750,11 @@
 
             const rawKeys = Object.keys(data[0]);
             const keyMap = {};
+            
             TARGET_COLUMNS.forEach(target => {
-                let foundKey = rawKeys.find(k => k.trim().toLowerCase() === target.toLowerCase());
+                let foundKey = rawKeys.find(k => k && k.trim().toLowerCase() === target.toLowerCase());
                 if (!foundKey && COLUMN_MAPPING[target]) {
-                    foundKey = rawKeys.find(k => COLUMN_MAPPING[target].some(kw => k.toLowerCase().includes(kw.toLowerCase())));
+                    foundKey = rawKeys.find(k => k && COLUMN_MAPPING[target].some(kw => k.toLowerCase().includes(kw.toLowerCase())));
                 }
                 keyMap[target] = foundKey;
             });
@@ -739,37 +762,36 @@
             // Header table
             const trHead = document.createElement('tr');
             const thIndex = document.createElement('th');
-            thIndex.className = 'px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-16';
+            thIndex.className = 'px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-12';
             thIndex.textContent = 'STT';
             trHead.appendChild(thIndex);
 
             TARGET_COLUMNS.forEach(headerText => {
                 const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap';
+                th.className = 'px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap';
                 th.textContent = headerText;
                 trHead.appendChild(th);
             });
             thead.appendChild(trHead);
 
-            // Body table (đảo ngược để dòng mới nhất lên trên)
+            // Body table
             const reversedData = [...data].reverse();
             reversedData.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition-colors';
+                tr.className = 'hover:bg-slate-50 transition-colors border-b border-slate-100';
 
                 const tdIndex = document.createElement('td');
-                tdIndex.className = 'px-6 py-4 whitespace-nowrap text-slate-400 font-medium';
+                tdIndex.className = 'px-4 py-3 whitespace-nowrap text-slate-400 font-medium text-xs md:text-sm';
                 tdIndex.textContent = data.length - index;
                 tr.appendChild(tdIndex);
 
                 TARGET_COLUMNS.forEach(targetCol => {
                     const td = document.createElement('td');
-                    td.className = 'px-6 py-4 whitespace-nowrap text-slate-700';
+                    td.className = 'px-4 py-3 whitespace-nowrap text-slate-700 text-xs md:text-sm max-w-[150px] md:max-w-xs truncate';
                     const actualKey = keyMap[targetCol];
                     let cellValue = actualKey ? row[actualKey] : '';
                     if (cellValue === undefined || cellValue === null) cellValue = '';
                     
-                    // Xử lý chia 100 và format tiền tệ cho các cột của Etsy
                     if (MONETARY_COLUMNS.includes(targetCol) && cellValue !== '') {
                         let num = extractNumber(cellValue);
                         cellValue = '$' + (num / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -778,11 +800,14 @@
                     if (typeof cellValue === 'string' && (cellValue.startsWith('http://') || cellValue.startsWith('https://'))) {
                         const a = document.createElement('a');
                         a.href = cellValue; a.target = '_blank';
-                        a.className = 'text-blue-600 hover:text-blue-800 underline truncate inline-block max-w-[200px]';
-                        a.textContent = 'Mở Liên kết';
+                        a.className = 'text-blue-600 hover:text-blue-800 underline inline-block truncate w-full';
+                        a.textContent = 'Mở Link';
                         td.appendChild(a);
                     } else {
-                        td.textContent = cellValue;
+                        // Cắt bớt text nếu quá dài trên mobile, dùng truncate của Tailwind
+                        td.textContent = cellValue || '(Trống)';
+                        if(!cellValue) td.className += " italic text-slate-400";
+                        td.title = cellValue; // Thêm title để hover xem đủ chữ
                     }
                     tr.appendChild(td);
                 });
@@ -790,7 +815,6 @@
             });
         }
 
-        // Chạy khi trang tải xong
         document.addEventListener('DOMContentLoaded', initApp);
 
     </script>
