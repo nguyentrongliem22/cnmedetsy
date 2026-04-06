@@ -76,7 +76,7 @@
                         <i class="fa-solid fa-chart-pie"></i> Tổng quan
                     </button>
                     <button onclick="switchMainView('table')" id="btn-view-table" class="flex-1 md:flex-none view-btn inactive px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-table-list"></i> Dữ liệu
+                        <i class="fa-solid fa-lock" id="icon-lock"></i> Dữ liệu
                     </button>
                 </div>
                 
@@ -247,10 +247,35 @@
 
     </main>
 
+    <!-- Modal Nhập Mã PIN -->
+    <div id="pin-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-red-100 text-red-600 p-2.5 rounded-lg">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Xác thực truy cập</h3>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">Vui lòng nhập mã PIN bảo mật để xem được bảng dữ liệu chi tiết.</p>
+            <div class="mb-5">
+                <input type="password" id="pin-input" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-center tracking-[0.5em] font-mono text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="••••">
+                <p id="pin-error" class="hidden text-red-500 text-xs mt-2 text-center font-medium"><i class="fa-solid fa-circle-exclamation mr-1"></i>Mã PIN không chính xác!</p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closePinModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Hủy</button>
+                <button onclick="verifyPin()" class="px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Cấu hình
         const SPREADSHEET_ID = '1V19a2evzXz4Jrs3g3V-5fx_6SUQMtCj-CgQTxBFF9-8';
         const SHEETS = ['Lilygrant', 'CNMEDDesign', 'PerfectGif'];
+        
+        // Cấu hình bảo mật
+        const SECRET_PIN = '1709';
+        let isTableUnlocked = false; // Trạng thái khóa, luôn reset về false khi tải lại trang
         
         // Form chuẩn cột
         const TARGET_COLUMNS = [
@@ -300,17 +325,28 @@
 
         // ---------------- THIẾT LẬP CHUNG ----------------
         function initApp() {
-            switchMainView('dashboard');
+            executeSwitchView('dashboard'); // Gọi hàm chuyển view nội bộ thay vì switchMainView để bỏ qua kiểm tra PIN lúc khởi động
             fetchAllData();
             setInterval(fetchAllData, 30000); // Auto refresh 30s
         }
 
+        // Hàm này bắt sự kiện click đổi tab, có kiểm tra PIN
         function switchMainView(view) {
+            if (view === 'table' && !isTableUnlocked) {
+                openPinModal();
+                return; // Ngừng việc đổi tab cho đến khi nhập đúng PIN
+            }
+            executeSwitchView(view);
+        }
+
+        // Thực thi việc đổi tab giao diện sau khi đã xác thực
+        function executeSwitchView(view) {
             currentMainView = view;
             const btnDash = document.getElementById('btn-view-dashboard');
             const btnTable = document.getElementById('btn-view-table');
             const viewDash = document.getElementById('view-dashboard');
             const viewTable = document.getElementById('view-table');
+            const iconLock = document.getElementById('icon-lock');
 
             if(view === 'dashboard') {
                 btnDash.className = "flex-1 md:flex-none view-btn active px-4 py-2 rounded-md text-sm font-medium transition-all flex justify-center items-center gap-2";
@@ -325,10 +361,50 @@
                 viewTable.classList.remove('hidden');
                 viewDash.classList.add('hidden');
                 
+                // Mở khóa icon
+                if (iconLock) {
+                    iconLock.classList.remove('fa-lock');
+                    iconLock.classList.add('fa-table-list');
+                }
+                
                 if(!isFirstLoad) {
                     renderTabs();
                     renderTable();
                 }
+            }
+        }
+
+        // ---------------- BẢO MẬT MÃ PIN ----------------
+        function openPinModal() {
+            document.getElementById('pin-modal').classList.remove('hidden');
+            document.getElementById('pin-error').classList.add('hidden');
+            
+            const pinInput = document.getElementById('pin-input');
+            pinInput.value = '';
+            setTimeout(() => pinInput.focus(), 100);
+
+            // Bắt sự kiện phím Enter
+            pinInput.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    verifyPin();
+                }
+            };
+        }
+
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+        }
+
+        function verifyPin() {
+            const input = document.getElementById('pin-input').value;
+            if (input === SECRET_PIN) {
+                isTableUnlocked = true;
+                closePinModal();
+                executeSwitchView('table'); // Nhập đúng thì đổi tab luôn
+            } else {
+                document.getElementById('pin-error').classList.remove('hidden');
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-input').focus();
             }
         }
 
@@ -426,7 +502,7 @@
                 
                 if(isFirstLoad) {
                     document.getElementById('loading-state').classList.replace('flex', 'hidden');
-                    switchMainView(currentMainView);
+                    executeSwitchView(currentMainView);
                     isFirstLoad = false;
                 } else {
                     if(currentMainView === 'dashboard') renderDashboard();
